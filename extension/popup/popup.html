@@ -1,0 +1,106 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Password Vault</title>
+    <link rel="stylesheet" href="./popup.css" />
+  </head>
+  <body>
+    <div id="app" class="app">
+      <div id="view-create" class="view hidden">
+        <div class="header">
+          <div class="title">Create Vault</div>
+        </div>
+        <div class="card">
+          <div class="row">
+            <label class="label" for="create-master">Master Password</label>
+            <input id="create-master" class="input" type="password" autocomplete="new-password" />
+          </div>
+          <div class="row">
+            <label class="label" for="create-master2">Confirm</label>
+            <input id="create-master2" class="input" type="password" autocomplete="new-password" />
+          </div>
+          <button id="btn-create" class="btn primary">Create</button>
+          <div id="create-error" class="error hidden"></div>
+        </div>
+      </div>
+
+      <div id="view-unlock" class="view hidden">
+        <div class="header">
+          <div class="title">Unlock</div>
+        </div>
+        <div class="card">
+          <div class="row">
+            <label class="label" for="unlock-master">Master Password</label>
+            <input id="unlock-master" class="input" type="password" autocomplete="current-password" />
+          </div>
+          <button id="btn-unlock" class="btn primary">Unlock</button>
+          <div id="unlock-error" class="error hidden"></div>
+        </div>
+      </div>
+
+      <div id="view-vault" class="view hidden">
+        <div class="header">
+          <div class="title">Vault</div>
+          <div class="actions">
+            <button id="btn-add" class="btn">Add</button>
+            <button id="btn-import" class="btn">Import</button>
+            <button id="btn-export" class="btn">Export</button>
+            <button id="btn-lock" class="btn">Lock</button>
+          </div>
+        </div>
+
+        <div class="search">
+          <input id="search" class="input" type="text" placeholder="Search" />
+        </div>
+
+        <div id="site-block" class="block hidden">
+          <div class="block-title">For This Site</div>
+          <div id="site-list" class="list"></div>
+        </div>
+
+        <div class="block">
+          <div class="block-title">All Items</div>
+          <div id="all-list" class="list"></div>
+        </div>
+
+        <div id="vault-error" class="error hidden"></div>
+      </div>
+
+      <div id="modal" class="modal hidden">
+        <div class="modal-backdrop" id="modal-backdrop"></div>
+        <div class="modal-card">
+          <div class="modal-header">
+            <div id="modal-title" class="modal-title"></div>
+            <button id="modal-close" class="icon-btn" type="button" aria-label="Close">×</button>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <label class="label" for="entry-name">Name</label>
+              <input id="entry-name" class="input" type="text" />
+            </div>
+            <div class="row">
+              <label class="label" for="entry-url">URL</label>
+              <input id="entry-url" class="input" type="text" placeholder="https://example.com" />
+            </div>
+            <div class="row">
+              <label class="label" for="entry-username">Username</label>
+              <input id="entry-username" class="input" type="text" autocomplete="username" />
+            </div>
+            <div class="row">
+              <label class="label" for="entry-password">Password</label>
+              <input id="entry-password" class="input" type="password" autocomplete="new-password" />
+            </div>
+            <button id="btn-save" class="btn primary">Save</button>
+            <div id="modal-error" class="error hidden"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="toast" class="toast hidden"></div>
+    <input id="file-import" class="hidden" type="file" accept="application/json" />
+
+    <script type="module" src="./popup.js"></script>
+  </body>
+</html>

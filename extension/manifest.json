@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Local Password Vault",
+  "version": "0.1.0",
+  "description": "Store, search, copy and manage website credentials locally with a master password.",
+  "action": {
+    "default_title": "Password Vault",
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/vault-16.png",
+      "32": "icons/vault-32.png"
+    }
+  },
+  "icons": {
+    "16": "icons/vault-16.png",
+    "32": "icons/vault-32.png",
+    "48": "icons/vault-48.png",
+    "128": "icons/vault-128.png"
+  },
+  "permissions": ["storage", "tabs", "clipboardWrite"]
+}
