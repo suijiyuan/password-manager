@@ -1,3 +1,5 @@
+import { initTheme } from "../shared/theme.js"
+
 function queryActiveTab() {
   return new Promise((resolve) => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => resolve(tabs?.[0] ?? null))
@@ -257,6 +259,12 @@ function toast(message) {
   toastEl.textContent = String(message ?? "")
   setHidden(toastEl, false)
   toastTimer = setTimeout(() => setHidden(toastEl, true), 1200)
+}
+
+function themeName(pref) {
+  if (pref === "light") return "浅色"
+  if (pref === "dark") return "深色"
+  return "跟随系统"
 }
 
 function downloadJson(filename, data) {
@@ -765,4 +773,15 @@ async function bootstrap() {
   await loadVault()
 }
 
-bootstrap()
+async function start() {
+  const themeButtons = Array.from(document.querySelectorAll("[data-theme-toggle]"))
+  await initTheme({
+    buttonEls: themeButtons,
+    onChange: (pref) => {
+      toast(`主题：${themeName(pref)}`)
+    }
+  })
+  await bootstrap()
+}
+
+start()
