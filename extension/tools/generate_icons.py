@@ -1,6 +1,7 @@
 import os
 import struct
 import zlib
+import math
 
 
 def _chunk(tag: bytes, data: bytes) -> bytes:
@@ -32,7 +33,8 @@ def write_png(path: str, w: int, h: int, rgba_bytes: bytes) -> None:
 
 
 def draw_icon(size: int) -> bytes:
-    w = h = size
+    scale = 4
+    w = h = size * scale
     px = bytearray([0, 0, 0, 0] * (w * h))
 
     def set_px(x: int, y: int, r: int, g: int, b: int, a: int = 255) -> None:
@@ -40,70 +42,109 @@ def draw_icon(size: int) -> bytes:
             i = (y * w + x) * 4
             px[i : i + 4] = bytes((r, g, b, a))
 
-    def fill_round_rect(x0: int, y0: int, x1: int, y1: int, radius: int, color):
-        r, g, b, a = color
-        for y in range(y0, y1):
-            for x in range(x0, x1):
-                dx = 0
-                dy = 0
-                if x < x0 + radius:
-                    dx = x0 + radius - x
-                elif x >= x1 - radius:
-                    dx = x - (x1 - radius - 1)
-                if y < y0 + radius:
-                    dy = y0 + radius - y
-                elif y >= y1 - radius:
-                    dy = y - (y1 - radius - 1)
-                if dx and dy and dx * dx + dy * dy > radius * radius:
-                    continue
-                set_px(x, y, r, g, b, a)
+    def _lerp(a: int, b: int, t: float) -> int:
+        return int(a + (b - a) * t + 0.5)
 
-    def fill_circle(cx: int, cy: int, rad: int, color):
-        r, g, b, a = color
-        r2 = rad * rad
-        for y in range(cy - rad, cy + rad + 1):
-            dy = y - cy
-            for x in range(cx - rad, cx + rad + 1):
-                dx = x - cx
-                if dx * dx + dy * dy <= r2:
-                    set_px(x, y, r, g, b, a)
+    def lerp_color(c0, c1, t: float):
+        return (
+            _lerp(c0[0], c1[0], t),
+            _lerp(c0[1], c1[1], t),
+            _lerp(c0[2], c1[2], t),
+            _lerp(c0[3], c1[3], t),
+        )
 
-    blue = (37, 99, 235, 255)
-    deep = (29, 78, 216, 255)
-    white = (255, 255, 255, 255)
+    def point_in_poly(x: float, y: float, poly) -> bool:
+        inside = False
+        n = len(poly)
+        j = n - 1
+        for i in range(n):
+            xi, yi = poly[i]
+            xj, yj = poly[j]
+            intersect = (yi > y) != (yj > y) and x < (xj - xi) * (y - yi) / (yj - yi + 1e-12) + xi
+            if intersect:
+                inside = not inside
+            j = i
+        return inside
 
-    m = max(1, size // 10)
-    x0, y0 = m, m
-    x1, y1 = size - m, size - m
-    radius = max(2, size // 6)
-    fill_round_rect(x0, y0, x1, y1, radius, blue)
+    def in_round_rect(x: float, y: float, x0: float, y0: float, x1: float, y1: float, r: float) -> bool:
+        cx = (x0 + x1) / 2
+        cy = (y0 + y1) / 2
+        hw = (x1 - x0) / 2
+        hh = (y1 - y0) / 2
+        qx = abs(x - cx) - (hw - r)
+        qy = abs(y - cy) - (hh - r)
+        if qx <= 0 and qy <= 0:
+            return True
+        qx = max(qx, 0.0)
+        qy = max(qy, 0.0)
+        return qx * qx + qy * qy <= r * r
 
-    inset = max(2, size // 7)
-    fill_round_rect(
-        x0 + inset,
-        y0 + inset,
-        x1 - inset,
-        y1 - inset,
-        max(2, radius - inset // 2),
-        deep,
-    )
+    def plane_poly() -> list[tuple[float, float]]:
+        return [
+            (0.14, 0.56),
+            (0.86, 0.18),
+            (0.62, 0.84),
+            (0.50, 0.64),
+            (0.34, 0.78),
+        ]
 
-    dial_r = max(3, size // 6)
-    cx = size // 2
-    cy = size // 2
-    fill_circle(cx, cy, dial_r, white)
-    fill_circle(cx, cy, max(1, dial_r // 3), blue)
+    def plane_fold_poly() -> list[tuple[float, float]]:
+        return [
+            (0.50, 0.64),
+            (0.86, 0.18),
+            (0.62, 0.84),
+        ]
 
-    bolt_r = max(1, size // 24)
-    for ox, oy in [
-        (-dial_r // 2, -dial_r // 2),
-        (dial_r // 2, -dial_r // 2),
-        (-dial_r // 2, dial_r // 2),
-        (dial_r // 2, dial_r // 2),
-    ]:
-        fill_circle(cx + ox, cy + oy, bolt_r, deep)
+    bg0 = (34, 197, 94, 255)
+    bg1 = (21, 128, 61, 255)
+    plane = (240, 253, 244, 255)
+    fold = (167, 243, 208, 255)
 
-    return bytes(px)
+    outer_rr = (0.06, 0.06, 0.94, 0.94)
+    outer_r = 0.22
+
+    plane_shape = plane_poly()
+    plane_fold = plane_fold_poly()
+
+    for y in range(h):
+        ny = (y + 0.5) / h
+        for x in range(w):
+            nx = (x + 0.5) / w
+            if not in_round_rect(nx, ny, outer_rr[0], outer_rr[1], outer_rr[2], outer_rr[3], outer_r):
+                continue
+
+            t = min(1.0, max(0.0, (ny - 0.06) / 0.88))
+            bg = lerp_color(bg0, bg1, t * 0.65)
+            c = bg
+
+            if point_in_poly(nx, ny, plane_shape):
+                c = plane
+                if point_in_poly(nx, ny, plane_fold):
+                    c = fold
+
+            set_px(x, y, c[0], c[1], c[2], c[3])
+
+    out_w = out_h = size
+    out = bytearray([0, 0, 0, 0] * (out_w * out_h))
+    for oy in range(out_h):
+        for ox in range(out_w):
+            r = g = b = a = 0
+            for sy in range(scale):
+                for sx in range(scale):
+                    ix = (oy * scale + sy) * w + (ox * scale + sx)
+                    p = ix * 4
+                    r += px[p]
+                    g += px[p + 1]
+                    b += px[p + 2]
+                    a += px[p + 3]
+            div = scale * scale
+            i = (oy * out_w + ox) * 4
+            out[i] = r // div
+            out[i + 1] = g // div
+            out[i + 2] = b // div
+            out[i + 3] = a // div
+
+    return bytes(out)
 
 
 def main() -> None:
@@ -116,4 +157,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
