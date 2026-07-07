@@ -599,12 +599,15 @@ btnUnlock.addEventListener("click", async () => {
     await bootstrap()
   } catch {
     showError(unlockError, "主密码错误")
+  } finally {
+    unlockMaster.value = ""
   }
 })
 
 btnLock.addEventListener("click", async () => {
   unlockedKey = null
   await clearSessionKey()
+  unlockMaster.value = ""
   await bootstrap()
 })
 
