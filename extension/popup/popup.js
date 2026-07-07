@@ -262,9 +262,9 @@ function toast(message) {
 }
 
 function themeName(pref) {
-  if (pref === "light") return "浅色"
-  if (pref === "dark") return "深色"
-  return "跟随系统"
+  if (pref === "light") return "Light"
+  if (pref === "dark") return "Dark"
+  return "System"
 }
 
 function downloadJson(filename, data) {
@@ -313,9 +313,9 @@ function normalizeImportedEntry(raw, nowMs) {
 async function copyText(label, value) {
   try {
     await navigator.clipboard.writeText(String(value ?? ""))
-    toast(`${label}已复制`)
+    toast(`${label} copied`)
   } catch {
-    toast(`${label}复制失败`)
+    toast(`Failed to copy ${label}`)
   }
 }
 
@@ -401,14 +401,14 @@ function buildItem(entry, { includeFill }) {
   btnCopyU.className = "icon-btn"
   btnCopyU.textContent = "U"
   btnCopyU.addEventListener("click", async () => {
-    await copyText("用户名", entry.username)
+    await copyText("Username", entry.username)
   })
 
   const btnCopyP = document.createElement("button")
   btnCopyP.className = "icon-btn"
   btnCopyP.textContent = "P"
   btnCopyP.addEventListener("click", async () => {
-    await copyText("密码", entry.password)
+    await copyText("Password", entry.password)
   })
 
   actions.appendChild(btnCopyU)
@@ -427,7 +427,7 @@ function buildItem(entry, { includeFill }) {
     const ok = confirm("Delete this item?")
     if (!ok) return
     if (!unlockedKey) {
-      toast("请先解锁")
+      toast("Please unlock first")
       await bootstrap()
       return
     }
@@ -444,7 +444,7 @@ function buildItem(entry, { includeFill }) {
       vaultRecord = await writeVaultData({ record, key: unlockedKey, data: { ...data, entries: nextEntries } })
       await loadVault()
     } catch {
-      toast("删除失败")
+      toast("Delete failed")
     }
   })
   actions.appendChild(btnDel)
@@ -507,7 +507,7 @@ function closeModal() {
 async function handleSave() {
   showError(modalError, "")
   if (!unlockedKey) {
-    showError(modalError, "请先解锁")
+    showError(modalError, "Please unlock first.")
     await refreshStatus()
     setHidden(modal, true)
     editingEntryId = null
@@ -550,7 +550,7 @@ async function handleSave() {
     closeModal()
     await loadVault()
   } catch {
-    showError(modalError, "保存失败")
+    showError(modalError, "Save failed.")
   }
 }
 
@@ -598,7 +598,7 @@ btnUnlock.addEventListener("click", async () => {
     await persistSessionKey(key)
     await bootstrap()
   } catch {
-    showError(unlockError, "主密码错误")
+    showError(unlockError, "Incorrect master password.")
   } finally {
     unlockMaster.value = ""
   }
@@ -617,7 +617,7 @@ btnAdd.addEventListener("click", async () => {
 
 btnImport.addEventListener("click", async () => {
   if (!unlockedKey) {
-    toast("请先解锁")
+    toast("Please unlock first")
     await bootstrap()
     return
   }
@@ -630,7 +630,7 @@ fileImport.addEventListener("change", async () => {
   if (!file) return
 
   if (!unlockedKey) {
-    toast("请先解锁")
+    toast("Please unlock first")
     await bootstrap()
     return
   }
@@ -648,13 +648,13 @@ fileImport.addEventListener("change", async () => {
     const text = await readFileAsText(file)
     parsed = JSON.parse(text)
   } catch {
-    toast("导入文件无效")
+    toast("Invalid import file")
     return
   }
 
   const importedEntries = Array.isArray(parsed?.entries) ? parsed.entries : null
   if (!importedEntries) {
-    toast("导入文件格式不正确")
+    toast("Invalid import file format")
     return
   }
 
@@ -677,25 +677,25 @@ fileImport.addEventListener("change", async () => {
     }
 
     if (!total) {
-      toast("没有可导入的条目")
+      toast("No importable items")
       return
     }
 
-    const ok = confirm(`将导入 ${total} 条、覆盖 ${overwrite} 条、新增 ${create} 条`)
+    const ok = confirm(`Import ${total} items: overwrite ${overwrite}, add ${create}`)
     if (!ok) return
 
     const merged = Array.from(byId.values()).sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0))
     vaultRecord = await writeVaultData({ record, key: unlockedKey, data: { ...data, entries: merged } })
-    toast("已导入")
+    toast("Imported")
     await loadVault()
   } catch {
-    toast("导入失败")
+    toast("Import failed")
   }
 })
 
 btnExport.addEventListener("click", async () => {
   if (!unlockedKey) {
-    toast("请先解锁")
+    toast("Please unlock first")
     await bootstrap()
     return
   }
@@ -722,9 +722,9 @@ btnExport.addEventListener("click", async () => {
       return out
     })
     downloadJson(filename, { entries })
-    toast("已导出")
+    toast("Exported")
   } catch {
-    toast("导出失败")
+    toast("Export failed")
   }
 })
 
@@ -781,7 +781,7 @@ async function start() {
   await initTheme({
     buttonEls: themeButtons,
     onChange: (pref) => {
-      toast(`主题：${themeName(pref)}`)
+      toast(`Theme: ${themeName(pref)}`)
     }
   })
   await bootstrap()

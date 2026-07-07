@@ -41,16 +41,16 @@ function nextThemePreference(current) {
 
 function themeLabel(pref) {
   const p = normalizeThemePreference(pref)
-  if (p === "light") return { short: "L", long: "浅色" }
-  if (p === "dark") return { short: "D", long: "深色" }
-  return { short: "A", long: "跟随系统" }
+  if (p === "light") return { short: "L", long: "Light" }
+  if (p === "dark") return { short: "D", long: "Dark" }
+  return { short: "A", long: "System" }
 }
 
 function applyThemeButtonState(buttonEl, pref) {
   const label = themeLabel(pref)
   buttonEl.textContent = label.short
-  buttonEl.setAttribute("title", `主题：${label.long}`)
-  buttonEl.setAttribute("aria-label", `主题：${label.long}`)
+  buttonEl.setAttribute("title", `Theme: ${label.long}`)
+  buttonEl.setAttribute("aria-label", `Theme: ${label.long}`)
 }
 
 async function initTheme({ buttonEl, buttonEls, onChange } = {}) {
