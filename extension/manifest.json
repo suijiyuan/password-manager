@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Local Password Vault",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Store, search, copy and manage website credentials locally with a master password.",
   "action": {
     "default_title": "Password Vault",
